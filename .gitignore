@@ -1,0 +1,13 @@
+# 비밀값 — .env.example만 커밋한다
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
