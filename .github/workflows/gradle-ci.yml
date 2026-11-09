@@ -1,0 +1,37 @@
+# 재사용 워크플로: Gradle 프로젝트(worklearn-api, worklearn-batch)의 빌드와 테스트.
+# 각 레포의 .github/workflows/ci.yml이 호출한다. 호출 예시는 README.
+name: Gradle CI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  gradle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      # Testcontainers 통합 테스트는 러너에 설치된 Docker로 돈다.
+      - name: 빌드와 테스트
+        run: ./gradlew build
+
+      - name: 테스트 리포트 보관
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: build/reports/tests/
+          if-no-files-found: ignore
+          retention-days: 7
