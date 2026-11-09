@@ -1,0 +1,38 @@
+# 재사용 워크플로: Next.js 프로젝트(worklearn-web)의 타입 검사, lint, 빌드.
+# 각 레포의 .github/workflows/ci.yml이 호출한다. 호출 예시는 README.
+name: Next CI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  next:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      # next-env.d.ts와 라우트 타입은 커밋하지 않으므로 tsc 전에 생성한다.
+      - name: 타입 검사
+        run: npx next typegen && npx tsc --noEmit
+
+      - name: lint
+        run: npm run lint
+
+      - name: 빌드
+        run: npm run build

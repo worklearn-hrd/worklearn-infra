@@ -42,10 +42,50 @@ make seed               # 테스트 데이터를 넣는다
 
 포트는 `127.0.0.1`에만 열린다. 이미 쓰는 포트와 겹치면 `.env`의 `POSTGRES_PORT`·`REDIS_PORT`를 바꾼다.
 
+## CI — 재사용 워크플로
+
+코드 레포는 자기 `.github/workflows/ci.yml`에서 이 저장소의 워크플로를 호출한다. 빌드 절차를 고칠 때는 여기 한 곳만 고친다.
+
+| 워크플로 | 쓰는 레포 | 하는 일 |
+| --- | --- | --- |
+| `gradle-ci.yml` | `worklearn-api`, `worklearn-batch` | JDK 21(temurin) → `./gradlew build`(Testcontainers 테스트 포함). 실패하면 테스트 리포트를 7일 보관 |
+| `next-ci.yml` | `worklearn-web` | `.nvmrc`의 Node → `npm ci` → `next typegen` + `tsc --noEmit` → `npm run lint` → `npm run build` |
+
+### 호출 예시
+
+`worklearn-api`·`worklearn-batch`의 `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: worklearn-hrd/worklearn-infra/.github/workflows/gradle-ci.yml@main
+```
+
+`worklearn-web`은 마지막 줄만 `next-ci.yml@main`으로 바꾼다.
+
+### 호출하는 레포가 갖출 것
+
+- Gradle: `gradlew`에 실행 권한이 있어야 한다. Windows에서 만든 프로젝트는 권한이 빠져 있으므로 `git update-index --chmod=+x gradlew` 후 커밋한다.
+- Next: `.nvmrc`, `package-lock.json`, `package.json`의 `lint`·`build` 스크립트, TypeScript.
+
+브랜치 보호에 넣을 필수 체크 이름은 `ci / gradle`(api·batch)과 `ci / next`(web)다.
+
 ## 디렉토리
 
 | 경로 | 내용 |
 | --- | --- |
+| `.github/workflows/` | 다른 레포가 호출하는 CI 재사용 워크플로 |
 | `docker-compose.yml` | 로컬 개발 환경 |
 | `Makefile` | 자주 쓰는 명령의 단축 이름 |
 | `load/` | k6 부하 테스트 스크립트 (2단계부터) |
