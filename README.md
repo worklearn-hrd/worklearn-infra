@@ -49,7 +49,7 @@ make seed               # 테스트 데이터를 넣는다
 | 워크플로 | 쓰는 레포 | 하는 일 |
 | --- | --- | --- |
 | `gradle-ci.yml` | `worklearn-api`, `worklearn-batch` | JDK 21(temurin) → `./gradlew build`(Testcontainers 테스트 포함). 실패하면 테스트 리포트를 7일 보관 |
-| `next-ci.yml` | `worklearn-web` | `.nvmrc`의 Node → `npm ci` → `next typegen` + `tsc --noEmit` → `npm run lint` → `npm run build` |
+| `next-ci.yml` | `worklearn-web` | `.nvmrc`의 Node → `npm ci` → `next typegen` + `tsc --noEmit` → `npm run lint` → `npm run test`(스크립트가 있을 때) → `npm run build` |
 
 ### 호출 예시
 
